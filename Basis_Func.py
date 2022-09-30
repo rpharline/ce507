@@ -63,21 +63,21 @@ def evaluateLagrangeBasis1D(variate,degree,basis_idx):
     return value
 
 def evaluateBernsteinBasis1D(variate, degree, basis_idx):
-    coeff = math.comb(degree+1, basis_idx)
-    n = degree
-    v = basis_idx
+    #change of basis from [-1,1] to [0,1]
+    variate = (1 + variate)*0.5
     
-    value = coeff * (variate**(v)) * (1-variate)**(n-v)
-    value = value/(2)**degree
+    coeff = math.comb(degree, basis_idx)
+    
+    value = coeff * (variate**(basis_idx)) * (1-variate)**(degree - basis_idx)
     
     return value
 
 # graph out functions
-x = numpy.linspace(-1,1,100)
-for i in range(0,len(x)):
-    y = evalLegendreBasis1D(1,x)
+# x = numpy.linspace(-1,1,100)
+# for i in range(0,len(x)):
+#     y = evaluateBernsteinBasis1D(x,2,1)
 
-plt.plot(x,y)
+# plt.plot(x,y)
 
 #tests monomial basis
 class Test_evaluateMonomialBasis1D( unittest.TestCase ):
@@ -155,3 +155,5 @@ class Test_evaluateBernsteinBasis1D( unittest.TestCase ):
         self.assertAlmostEqual( first = evaluateBernsteinBasis1D( variate = +1, degree = 2, basis_idx = 0 ), second = 0.00, delta = 1e-12 )
         self.assertAlmostEqual( first = evaluateBernsteinBasis1D( variate = +1, degree = 2, basis_idx = 1 ), second = 0.00, delta = 1e-12 )
         self.assertAlmostEqual( first = evaluateBernsteinBasis1D( variate = +1, degree = 2, basis_idx = 2 ), second = 1.00, delta = 1e-12 )
+        
+unittest.main()
