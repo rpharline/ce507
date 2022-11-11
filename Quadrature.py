@@ -78,7 +78,7 @@ def computeNewtonCotesQuadrature(fun,num_points):
     return total
 
 def computeGaussLegendreQuadrature( n ):
-    M = numpy.zeros( 2*n, dtype = "double" )
+    M = numpy.zeros( int(2*n) )
     M[0] = 2.0
     x0 = numpy.linspace( -1, 1, n )
     sol = scipy.optimize.least_squares( lambda x : objFun( M, x ), x0, bounds = (-1, 1), ftol = 1e-14, xtol = 1e-14, gtol = 1e-14 )
