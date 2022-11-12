@@ -10,6 +10,42 @@ import unittest
 
 # import Basis_Func as BF
 
+def generateMesh(xmin,xmax,degree):
+    num_elems = len(degree)
+    node_coords = []
+    ien_array = []
+    elem_bound = numpy.linspace(xmin, xmax, num_elems + 1)
+    
+    counter0 = int(0)
+    elem_ien = []
+    for i in range(0,degree[0]+1):
+        elem_ien.append(counter0)
+        counter0 += int(1)
+    ien_array.append(elem_ien)
+    
+    for e in range(0,num_elems):
+        elem_xmin = elem_bound[e]
+        elem_xmax = elem_bound[e+1]
+        
+        elem_nodes = numpy.linspace(elem_xmin,elem_xmax,degree[e]+1)
+        node_coords.append(elem_nodes)
+    
+       
+        
+        #following entries to ien array
+        if e == 0:
+            continue
+        else: 
+            elem_ien = []
+            ien_array.append(elem_ien)
+            counter1 = ien_array[-2][-1]
+            for i in range(0,degree[e]+1):
+                ien_array[-1].append(counter1)
+                counter1 += 1
+    
+    
+    return node_coords, ien_array
+
 def generateMesh1D(xmin,xmax,num_elems,degree):
     node_coords = numpy.linspace(xmin,xmax,int(degree * num_elems+1))
 
