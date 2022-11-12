@@ -143,16 +143,15 @@ def evaluateSolutionAt( x, d_matrix, node_coords, ien_array, eval_basis ):
     
     #identifies element of x point
     elem_bound = numpy.linspace(domain[0],domain[1],num_elems+1)
-    elem_idx = 0
     for i in range(0,num_elems):
-        if x >= elem_bound[i] and x <= elem_bound[i]:
+        if x >= elem_bound[i] and x <= elem_bound[i+1]:
             elem_idx = i
         else:
             continue
     
-    degree = len(ien_array[elem_idx])
+    degree = len(ien_array[elem_idx])-1
     elem_domain = [node_coords[elem_idx][0],node_coords[elem_idx][-1]]
-    param_x = Change_of_Domain([-1,1], elem_domain,x)
+    param_x = Change_of_Domain(elem_domain,[-1,1],x)
     for i in range(0,len(ien_array[elem_idx])):
         d_idx = ien_array[elem_idx][i]
         if eval_basis == basis.evalLegendreBasis1D:
