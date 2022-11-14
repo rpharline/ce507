@@ -71,6 +71,14 @@ def evalBernsteinBasis1D(variate, degree, basis_idx):
     value = coeff * (variate**(basis_idx)) * (1-variate)**(degree - basis_idx)
     
     return value
+def evalUSplineBasis1D(variate,C_matrix,degree):
+    b_vector = numpy.zeros((degree+1,1))
+    for i in range(0,degree+1):
+        b_vector[i] = evalBernsteinBasis1D(variate, degree, i)
+    
+    values = numpy.matmul(C_matrix,b_vector)
+    return values
+
 
 # graph out functions
 # x = numpy.linspace(-1,1,100)

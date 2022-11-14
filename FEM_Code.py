@@ -268,4 +268,4 @@ class Test_assembleForceVector( unittest.TestCase ):
         test_force_vector = assembleForceVector( target_fun = lambda x: x**2.0, domain = [0, 1], degree = 2, solution_basis = basis.evalBernsteinBasis1D )
         gold_force_vector = numpy.array( [ 1.0/30.0, 1.0/10.0, 1.0/5.0 ] )
         self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
-# unittest.main()
+unittest.main()

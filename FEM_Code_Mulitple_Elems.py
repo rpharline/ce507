@@ -88,6 +88,7 @@ def assembleGramMatrix(node_coords, ien_array, solution_basis):
                         N_B = basis.evaluateLagrangeBasis1D(xi_qp[q], degree, B)
                         original_domain = [-1,1]
                         jacob = Jacobian(original_domain, output_domain = domain)
+                    
                     M_term[A,B] += N_A * N_B * w_qp[q] * jacob
             
         M_list.append(M_term)
