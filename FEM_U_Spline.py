@@ -36,14 +36,14 @@ def plotUsplineBasis( uspline, color_by ):
         x = numpy.linspace( elem_domain[0], elem_domain[1], num_pts )
         y = numpy.zeros( shape = ( elem_degree + 1, num_pts ) )
         for i in range( 0, num_pts ):
-            y[:,i] = basis.evalUSplineBasis1D(x[i], C_matrix, elem_degree) # Evaluate the current element’s spline basis at the current coordinate
+            y[:,i] = basis.evalUSplineBasis1D(x[i], C_matrix, elem_degree, elem_domain) # Evaluate the current element’s spline basis at the current coordinate
         # Do plotting for the current element
         for n in range( 0, elem_degree + 1 ):
             if color_by == "element":
                 color = getLineColor( elem_idx )
             elif color_by == "node":
                 color = getLineColor( elem_node_ids[n] )
-            matplotlib.pyplot.plot( x, y[n,:], color = getLineColor( color ) )
+            matplotlib.pyplot.plot( x, y[n,:], color =  color )
     matplotlib.pyplot.plot.show()
 
 def getLineColor( idx ):
@@ -52,6 +52,6 @@ def getLineColor( idx ):
     mod_idx = idx % num_colors
     return matplotlib.colors.TABLEAU_COLORS[ colors[ mod_idx ] ]
 
-# uspline = bext.readBEXT( "your_uspline_bext.json" )
-# plotUsplineBasis( uspline, "element" )
-# plotUsplineBasis( uspline, "node" )
+uspline = bext.readBEXT( "quadratic_bspline.json" )
+plotUsplineBasis( uspline, "element" )
+plotUsplineBasis( uspline, "node" )

@@ -24,6 +24,16 @@ def taylorExpansion( fun, a, order ):
         i += 1
     return p
 
+def Change_of_Domain(original_domain,output_domain,old_x):
+    a = original_domain[0]
+    b = original_domain[1]
+    c = output_domain[0]
+    d = output_domain[1]
+    
+    x = ((d-c)/(b-a))*old_x + ((b*c-a*d)/(b-a))
+    
+    return x
+
 def evaluateMonomialBasis1D(degree, variate):
     
     value = 0
@@ -71,12 +81,13 @@ def evalBernsteinBasis1D(variate, degree, basis_idx):
     value = coeff * (variate**(basis_idx)) * (1-variate)**(degree - basis_idx)
     
     return value
-def evalUSplineBasis1D(variate,C_matrix,degree):
-    b_vector = numpy.zeros((degree+1,1))
+def evalUSplineBasis1D(variate,C_matrix,degree,domain):
+    b_vector = numpy.zeros((degree+1))
+    param_x = Change_of_Domain(domain,[-1,1], variate)
     for i in range(0,degree+1):
-        b_vector[i] = evalBernsteinBasis1D(variate, degree, i)
+        b_vector[i] = evalBernsteinBasis1D(param_x, degree, i)
     
-    values = numpy.matmul(C_matrix,b_vector)
+    values = numpy.dot(C_matrix,b_vector)
     return values
 
 
