@@ -52,6 +52,6 @@ def getLineColor( idx ):
     mod_idx = idx % num_colors
     return matplotlib.colors.TABLEAU_COLORS[ colors[ mod_idx ] ]
 
-uspline = bext.readBEXT( "your_uspline_bext.json" )
-plotUsplineBasis( uspline, "element" )
-plotUsplineBasis( uspline, "node" )
+# uspline = bext.readBEXT( "your_uspline_bext.json" )
+# plotUsplineBasis( uspline, "element" )
+# plotUsplineBasis( uspline, "node" )
