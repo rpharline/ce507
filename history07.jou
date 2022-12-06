@@ -1,0 +1,2 @@
+#!python
+cubit.cmd('exit')

@@ -23,6 +23,9 @@ def getNumElems( uspline ):
 def getNumVertices( uspline ):
     return uspline["num_vertices"]
 
+# def getContinuity(uspline):
+#     return uspline["continuity"]
+
 def getNumNodes( uspline ):
     return getSplineNodes( uspline ).shape[0]
 

@@ -74,8 +74,8 @@ def assembleGramMatrix(node_coords, ien_array, solution_basis):
                 for q in range(0,len(xi_qp)):
                     
                     if solution_basis == basis.evalBernsteinBasis1D:
-                        N_A = basis.evalBernsteinBasis1D(xi_qp[q], degree, A)
-                        N_B = basis.evalBernsteinBasis1D(xi_qp[q], degree, B)
+                        N_A = basis.evalBernsteinBasis1D(xi_qp[q], degree, [-1,1], A)
+                        N_B = basis.evalBernsteinBasis1D(xi_qp[q], degree, [-1,1], B)
                         original_domain = [-1,1]
                         jacob = Jacobian(original_domain, output_domain = domain)
                     elif solution_basis == basis.evalLegendreBasis1D:
@@ -113,7 +113,7 @@ def assembleForceVector(target_fun, node_coords, ien_array, solution_basis):
         for A in range(0,degree+1):
             for q in range(0,len(xi_pq)):
                 if solution_basis == basis.evalBernsteinBasis1D:
-                    N_A = basis.evalBernsteinBasis1D(xi_pq[q], degree, A)
+                    N_A = basis.evalBernsteinBasis1D(xi_pq[q], degree, [-1,1], A)
                     jacob = Jacobian([-1,1], domain)
                 elif solution_basis == basis.evalLegendreBasis1D:
                     N_A = basis.evalLegendreBasis1D(A, xi_pq[q])
@@ -157,6 +157,8 @@ def evaluateSolutionAt( x, d_matrix, node_coords, ien_array, eval_basis ):
         d_idx = ien_array[elem_idx][i]
         if eval_basis == basis.evalLegendreBasis1D:
             func = eval_basis(i,param_x)
+        elif eval_basis == basis.evalBernsteinBasis1D:
+            func = eval_basis(param_x, degree, [-1,1], i)
         else:
             func = eval_basis(param_x,degree,i)
         y += func * d_matrix[d_idx]

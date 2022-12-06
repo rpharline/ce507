@@ -34,6 +34,24 @@ def Change_of_Domain(original_domain,output_domain,old_x):
     
     return x
 
+def affine_mapping_1D(original_domain,output_domain,old_x):
+    a = original_domain[0]
+    b = original_domain[1]
+    c = output_domain[0]
+    d = output_domain[1]
+    
+    x = ((d-c)/(b-a))*old_x + ((b*c-a*d)/(b-a))
+    
+    return x
+
+def Jacobian(original_domain,output_domain):
+    a = original_domain[0]
+    b = original_domain[1]
+    c = output_domain[0]
+    d = output_domain[1]
+    jacobian = ((d-c)/(b-a))        
+    return jacobian
+
 def evaluateMonomialBasis1D(degree, variate):
     
     value = 0
@@ -72,23 +90,48 @@ def evaluateLagrangeBasis1D(variate,degree,basis_idx):
         
     return value
 
-def evalBernsteinBasis1D(variate, degree, basis_idx):
-    #change of basis from [-1,1] to [0,1]
-    variate = (1 + variate)*0.5
+def evalBernsteinBasis1D(variate, degree, domain, basis_idx):
+    
+    variate = Change_of_Domain(domain, [0,1], variate)
     
     coeff = math.comb(degree, basis_idx)
     
     value = coeff * (variate**(basis_idx)) * (1-variate)**(degree - basis_idx)
     
     return value
-def evalUSplineBasis1D(variate,C_matrix,degree,domain):
+
+def evalSplineBasis1D( extraction_operator, basis_idx, domain, variate ):
+    degree = int(extraction_operator.shape[0] - 1)
     b_vector = numpy.zeros((degree+1))
-    param_x = Change_of_Domain(domain,[-1,1], variate)
     for i in range(0,degree+1):
-        b_vector[i] = evalBernsteinBasis1D(param_x, degree, i)
+        b_vector[i] = evalBernsteinBasis1D(variate, degree, domain, i)
     
-    values = numpy.dot(C_matrix,b_vector)
-    return values
+    values = numpy.dot(extraction_operator,b_vector)
+    return values[basis_idx]
+
+def evalBernsteinBasisDeriv(degree, basis_idx, deriv, domain, variate):
+    x = sympy.Symbol('x')
+
+    equation = evalBernsteinBasis1D(x, degree,domain, basis_idx)
+    
+    
+    if deriv == 0:
+        value = equation.subs(x,variate)
+    else:
+        deriv_equation = sympy.diff(equation,x,deriv)
+        value = deriv_equation.subs(x,variate)
+    return value
+
+def evalSplineBasisDeriv1D( extraction_operator, basis_idx, deriv, domain, variate):
+    degree = int(extraction_operator.shape[0] - 1)
+    b_vector = numpy.zeros((degree+1))
+    for i in range(0,degree+1):
+        b_vector[i] = evalBernsteinBasisDeriv(degree, i, deriv, domain, variate)
+    
+    b_vector = b_vector.transpose()
+    value_vec = numpy.matmul(extraction_operator,b_vector)
+    return value_vec[basis_idx]
+
 
 
 # graph out functions
@@ -174,5 +217,7 @@ def evalUSplineBasis1D(variate,C_matrix,degree,domain):
 #         self.assertAlmostEqual( first = evaluateBernsteinBasis1D( variate = +1, degree = 2, basis_idx = 0 ), second = 0.00, delta = 1e-12 )
 #         self.assertAlmostEqual( first = evaluateBernsteinBasis1D( variate = +1, degree = 2, basis_idx = 1 ), second = 0.00, delta = 1e-12 )
 #         self.assertAlmostEqual( first = evaluateBernsteinBasis1D( variate = +1, degree = 2, basis_idx = 2 ), second = 1.00, delta = 1e-12 )
-        
+
+
+    
 # unittest.main()

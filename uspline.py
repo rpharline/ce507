@@ -7,14 +7,18 @@ Created on Mon Nov 14 16:32:36 2022
 
 import sys
 import numpy
+import os
 
 if __name__ == "CubitPythonInterpreter_2":
     # We are running within the Coreform Cubit application, cubit python module is already available
     pass
 else:
-    sys.path.append("your/path/to/cubit/bin")
+    # os.add_dll_directory(r"C:\Program Files\Coreform Cubit 2022.11\bin")
+    sys.path.append(r"C:\Program Files\Coreform Cubit 2022.11\bin")
+   
     import cubit
-    cubit.init([])
+    cubit.init(["cubit", "-nog", "-nojournal"])
+   
 
 ## MAIN FUNCTION
 def make_uspline_mesh( spline_space, filename ):
@@ -27,10 +31,10 @@ def make_uspline_mesh( spline_space, filename ):
 
 ## SECONDARY FUNCTIONS
 def build_geometry( spline_space ):
-  cubit.cmd( f"create curve location {spline_space[’domain’][0]} 0 0 location {spline_space[’domain’][1]} 0 0" )
+  cubit.cmd( f"create curve location {spline_space['domain'][0]} 0 0 location {spline_space['domain'][1]} 0 0" )
 
 def generate_bezier_mesh( spline_space ):
-  cubit.cmd( f"curve 1 interval {len(spline_space[’degree’])}" )
+  cubit.cmd( f"curve 1 interval {len(spline_space['degree'])}" )
   cubit.cmd( "mesh curve 1" )
 
 def assign_uspline_params( spline_space ):
@@ -51,7 +55,7 @@ def build_uspline():
   cubit.cmd( "fit uspline 1" )
 
 def export_uspline( filename ):
-  cubit.cmd( f"export uspline 1 json ’{filename}’" )
+  cubit.cmd( f"export uspline 1 json '{filename}'" )
 
 ## UTILITY FUNCTIONS
 def get_num_elems():
@@ -88,3 +92,7 @@ def sort_element_nodes( ien_array ):
     if x1 < x0:
       ien_array[eid] = tuple( reversed( ien_array[eid] ) )
   return ien_array
+
+def getContinuity(spline_space):
+    continuity = spline_space["continuity"]
+    return continuity

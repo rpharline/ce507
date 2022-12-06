@@ -51,8 +51,8 @@ def assembleGramMatrix(domain,degree,solution_basis):
         for B in range(0,degree+1):
             for q in range(0,len(xi_qp)):
                 if solution_basis == basis.evalBernsteinBasis1D:
-                    N_A = basis.evalBernsteinBasis1D(xi_qp[q], degree, A)
-                    N_B = basis.evalBernsteinBasis1D(xi_qp[q], degree, B)
+                    N_A = basis.evalBernsteinBasis1D(xi_qp[q], degree,domain,A)
+                    N_B = basis.evalBernsteinBasis1D(xi_qp[q], degree,domain, B)
                     original_domain = [-1,1]
                     jacob = Jacobian(original_domain, output_domain = domain)
                 elif solution_basis == basis.evalLegendreBasis1D:
@@ -78,7 +78,7 @@ def assembleForceVector( target_fun, domain, degree, solution_basis):
     for A in range(0,degree+1):
         for q in range(0,len(xi_pq)):
             if solution_basis == basis.evalBernsteinBasis1D:
-                N_A = basis.evalBernsteinBasis1D(xi_pq[q], degree, A)
+                N_A = basis.evalBernsteinBasis1D(xi_pq[q], degree,domain, A)
                 jacob = Jacobian([-1,1], domain)
             elif solution_basis == basis.evalLegendreBasis1D:
                 N_A = basis.evalLegendreBasis1D(A, xi_pq[q])
@@ -97,6 +97,8 @@ def evaluateSolutionAt( x, domain, coeff, solution_basis ):
     for n in range( 0, len( coeff ) ):
         if solution_basis == basis.evalLegendreBasis1D:
             sol_basis = solution_basis(n,param_x)
+        elif solution_basis == basis.evalBernsteinBasis1D:
+            sol_basis = solution_basis(param_x, degree, domain, n)
         else:
             sol_basis = solution_basis(degree = degree, basis_idx = n, variate = param_x )
         y += coeff[n] * sol_basis
