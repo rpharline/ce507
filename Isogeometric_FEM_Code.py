@@ -107,16 +107,20 @@ def assembleForceVector(continuity,target_fun, uspline_bext):
         jacob = Jacobian(original_domain = [-1,1], output_domain = domain)
         for A in range(0,degree+1):
             for q in range(0,len(xi_qp)):
-                N_A = basis.evalSplineBasis1D(extraction_operator, A, domain, xi_qp[q])
+                N_A = basis.evalSplineBasis1D(extraction_operator, A, [-1,1], xi_qp[q])
                 
                 F_term[A] += N_A * target_fun(Change_of_Domain([-1,1],domain,xi_qp[q])) * w_qp[q] * jacob 
         F_list.append(F_term)
     F = Local_to_Global_F_Matrix(F_list,degree_list,continuity)
     return F
 
-def computeSolution(target_fun, uspline_bext):
-    M = assembleGramMatrix(uspline_bext)
-    F = assembleForceVector(target_fun, uspline_bext)
+def computeSolution(continuity,target_fun, uspline_bext):
+    continuity2 = []
+    for i in range(0,len(continuity)):
+        continuity2.append(continuity[i])
+        
+    M = assembleGramMatrix(continuity,uspline_bext)
+    F = assembleForceVector(continuity2,target_fun, uspline_bext)
     F = F.transpose()
     d = numpy.linalg.solve(M, F)
     return d
@@ -134,7 +138,6 @@ def evaluateSolutionAt( x, coeff, uspline_bext ):
     return sol
 
 def computeElementFitError( target_fun, coeff, uspline_bext, elem_id ):
-    domain = bext.getDomain( uspline_bext )
     elem_domain = bext.getElementDomain( uspline_bext, elem_id )
     elem_degree = bext.getElementDegree( uspline_bext, elem_id )
     num_qp = int( numpy.ceil( ( 2*elem_degree + 1 ) / 2.0 ) + 1 )
@@ -225,138 +228,144 @@ class Test_assembleGramMatrix( unittest.TestCase ):
                                           [ 0.0, 1.0/560.0, 1.0/56.0, 7.0/80.0, 1.0/7.0 ] ] )
         self.assertTrue( numpy.allclose( test_gram_matrix, gold_gram_matrix ) )
         
-# class Test_assembleForceVector( unittest.TestCase ):
-#     def test_const_force_fun_two_element_linear_bspline( self ):
-#         target_fun = lambda x: numpy.pi
-#         spline_space = { "domain": [-1, 1], "degree": [ 1, 1 ], "continuity": [ -1, 0, -1 ] }
-#         continuity = spline_space["continuity"]
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_force_vector = assembleForceVector( target_fun = target_fun, uspline_bext = uspline_bext )
-#         gold_force_vector = numpy.array( [ numpy.pi / 2.0, numpy.pi, numpy.pi / 2.0 ] )
-#         self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
+class Test_assembleForceVector( unittest.TestCase ):
+    def test_const_force_fun_two_element_linear_bspline( self ):
+        target_fun = lambda x: numpy.pi
+        spline_space = { "domain": [-1, 1], "degree": [ 1, 1 ], "continuity": [ -1, 0, -1 ] }
+        continuity = spline_space["continuity"]
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        test_force_vector = assembleForceVector( continuity,target_fun = target_fun, uspline_bext = uspline_bext )
+        gold_force_vector = numpy.array( [ numpy.pi / 2.0, numpy.pi, numpy.pi / 2.0 ] )
+        self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
 
-#     def test_linear_force_fun_two_element_linear_bspline( self ):
-#         target_fun = lambda x: x
-#         spline_space = { "domain": [-1, 1], "degree": [ 1, 1 ], "continuity": [ -1, 0, -1 ] }
-#         continuity = spline_space["continuity"]
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_force_vector = assembleForceVector( target_fun = target_fun, uspline_bext = uspline_bext )
-#         gold_force_vector = numpy.array( [ -1.0/3.0, 0.0, 1.0/3.0 ] )
-#         self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
+    def test_linear_force_fun_two_element_linear_bspline( self ):
+        target_fun = lambda x: x
+        spline_space = { "domain": [-1, 1], "degree": [ 1, 1 ], "continuity": [ -1, 0, -1 ] }
+        continuity = spline_space["continuity"]
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        test_force_vector = assembleForceVector( continuity,target_fun = target_fun, uspline_bext = uspline_bext )
+        gold_force_vector = numpy.array( [ -1.0/3.0, 0.0, 1.0/3.0 ] )
+        self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
 
-#     def test_quadratic_force_fun_two_element_linear_bspline( self ):
-#         target_fun = lambda x: x**2
-#         spline_space = { "domain": [-1, 1], "degree": [ 1, 1 ], "continuity": [ -1, 0, -1 ] }
-#         continuity = spline_space["continuity"]
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_force_vector = assembleForceVector( target_fun = target_fun, uspline_bext = uspline_bext )
-#         gold_force_vector = numpy.array( [ 1.0/4.0, 1.0/6.0, 1.0/4.0 ] )
-#         self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
+    def test_quadratic_force_fun_two_element_linear_bspline( self ):
+        target_fun = lambda x: x**2
+        spline_space = { "domain": [-1, 1], "degree": [ 1, 1 ], "continuity": [ -1, 0, -1 ] }
+        continuity = spline_space["continuity"]
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        test_force_vector = assembleForceVector(continuity, target_fun = target_fun, uspline_bext = uspline_bext )
+        gold_force_vector = numpy.array( [ 1.0/4.0, 1.0/6.0, 1.0/4.0 ] )
+        self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
 
-#     def test_const_force_fun_two_element_quadratic_bspline( self ):
-#         target_fun = lambda x: numpy.pi
-#         spline_space = { "domain": [-1, 1], "degree": [ 2, 2 ], "continuity": [ -1, 1, -1 ] }
-#         continuity = spline_space["continuity"]
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_force_vector = assembleForceVector( target_fun = target_fun, uspline_bext = uspline_bext )
-#         gold_force_vector = numpy.array( [ numpy.pi/3.0, 2.0*numpy.pi/3.0, 2.0*numpy.pi/3.0, numpy.pi/3.0 ] )
-#         self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
+    def test_const_force_fun_two_element_quadratic_bspline( self ):
+        target_fun = lambda x: numpy.pi
+        spline_space = { "domain": [-1, 1], "degree": [ 2, 2 ], "continuity": [ -1, 1, -1 ] }
+        continuity = spline_space["continuity"]
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        test_force_vector = assembleForceVector(continuity ,target_fun = target_fun, uspline_bext = uspline_bext )
+        gold_force_vector = numpy.array( [ numpy.pi/3.0, 2.0*numpy.pi/3.0, 2.0*numpy.pi/3.0, numpy.pi/3.0 ] )
+        self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
 
-#     def test_linear_force_fun_two_element_quadratic_bspline( self ):
-#         target_fun = lambda x: x
-#         spline_space = { "domain": [-1, 1], "degree": [ 2, 2 ], "continuity": [ -1, 1, -1 ] }
-#         continuity = spline_space["continuity"]
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_force_vector = assembleForceVector( target_fun = target_fun, uspline_bext = uspline_bext )
-#         gold_force_vector = numpy.array( [ -1.0/4.0, -1.0/6.0, 1.0/6.0, 1.0/4.0 ] )
-#         self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
+    def test_linear_force_fun_two_element_quadratic_bspline( self ):
+        target_fun = lambda x: x
+        spline_space = { "domain": [-1, 1], "degree": [ 2, 2 ], "continuity": [ -1, 1, -1 ] }
+        continuity = spline_space["continuity"]
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        test_force_vector = assembleForceVector(continuity, target_fun = target_fun, uspline_bext = uspline_bext )
+        gold_force_vector = numpy.array( [ -1.0/4.0, -1.0/6.0, 1.0/6.0, 1.0/4.0 ] )
+        self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
 
-#     def test_quadratic_force_fun_two_element_quadratic_bspline( self ):
-#         target_fun = lambda x: x**2
-#         spline_space = { "domain": [-1, 1], "degree": [ 2, 2 ], "continuity": [ -1, 1, -1 ] }
-#         continuity = spline_space["continuity"]
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_force_vector = assembleForceVector( target_fun = target_fun, uspline_bext = uspline_bext )
-#         gold_force_vector = numpy.array( [ 2.0/10.0, 2.0/15.0, 2.0/15.0, 2.0/10.0 ] )
-#         self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
+    def test_quadratic_force_fun_two_element_quadratic_bspline( self ):
+        target_fun = lambda x: x**2
+        spline_space = { "domain": [-1, 1], "degree": [ 2, 2 ], "continuity": [ -1, 1, -1 ] }
+        continuity = spline_space["continuity"]
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        test_force_vector = assembleForceVector(continuity, target_fun = target_fun, uspline_bext = uspline_bext )
+        gold_force_vector = numpy.array( [ 2.0/10.0, 2.0/15.0, 2.0/15.0, 2.0/10.0 ] )
+        self.assertTrue( numpy.allclose( test_force_vector, gold_force_vector ) )
         
-# class Test_computeSolution( unittest.TestCase ):
-#     def test_cubic_polynomial_target_linear_bspline( self ):
-#         # print( "POLY TEST" )
-#         target_fun = lambda x: x**3 - (8/5)*x**2 + (3/5)*x
-#         spline_space = { "domain": [0, 1], "degree": [ 1, 1 ], "continuity": [ -1, 0, -1 ] }
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_sol_coeff = computeSolution( target_fun = target_fun, uspline_bext = uspline_bext )
-#         # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
-#         gold_sol_coeff = numpy.array( [ 9.0/160.0, 7.0/240.0, -23.0/480.0 ] )
-#         abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
-#         self.assertTrue( numpy.allclose( gold_sol_coeff, test_sol_coeff ) )
-#         self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e0 )
+class Test_computeSolution( unittest.TestCase ):
+    def test_cubic_polynomial_target_linear_bspline( self ):
+        # print( "POLY TEST" )
+        target_fun = lambda x: x**3 - (8/5)*x**2 + (3/5)*x
+        spline_space = { "domain": [0, 1], "degree": [ 1, 1 ], "continuity": [ -1, 0, -1 ] }
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        continuity = spline_space["continuity"]
+        test_sol_coeff = computeSolution( continuity,target_fun = target_fun, uspline_bext = uspline_bext )
+        # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
+        gold_sol_coeff = numpy.array( [ 9.0/160.0, 7.0/240.0, -23.0/480.0 ] )
+        abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
+        self.assertTrue( numpy.allclose( gold_sol_coeff, test_sol_coeff ) )
+        self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e0 )
 
-#     def test_cubic_polynomial_target_quadratic_bspline( self ):
-#         # print( "POLY TEST" )
-#         target_fun = lambda x: x**3 - (8/5)*x**2 + (3/5)*x
-#         spline_space = { "domain": [0, 1], "degree": [ 2, 2 ], "continuity": [ -1, 1, -1 ] }
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_sol_coeff = computeSolution( target_fun = target_fun, uspline_bext = uspline_bext )
-#         # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
-#         gold_sol_coeff = numpy.array( [ 1.0/120.0, 9.0/80.0, -1.0/16.0, -1.0/120.0 ] )
-#         abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
-#         self.assertTrue( numpy.allclose( gold_sol_coeff, test_sol_coeff ) )
-#         self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-1 )
+    def test_cubic_polynomial_target_quadratic_bspline( self ):
+        # print( "POLY TEST" )
+        target_fun = lambda x: x**3 - (8/5)*x**2 + (3/5)*x
+        spline_space = { "domain": [0, 1], "degree": [ 2, 2 ], "continuity": [ -1, 1, -1 ] }
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        continuity = spline_space["continuity"]
+        test_sol_coeff = computeSolution( target_fun = target_fun, uspline_bext = uspline_bext )
+        # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
+        gold_sol_coeff = numpy.array( [ 1.0/120.0, 9.0/80.0, -1.0/16.0, -1.0/120.0 ] )
+        abs_err, rel_err = computeFitError( continuity,target_fun, test_sol_coeff, uspline_bext )
+        self.assertTrue( numpy.allclose( gold_sol_coeff, test_sol_coeff ) )
+        self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-1 )
 
-#     def test_cubic_polynomial_target_cubic_bspline( self ):
-#         # print( "POLY TEST" )
-#         target_fun = lambda x: x**3 - (8/5)*x**2 + (3/5)*x
-#         spline_space = { "domain": [0, 1], "degree": [ 3, 3 ], "continuity": [ -1, 2, -1 ] }
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_sol_coeff = computeSolution( target_fun = target_fun, uspline_bext = uspline_bext )
-#         # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
-#         gold_sol_coeff = numpy.array( [ 0.0, 1.0/10.0, 1.0/30.0, -1.0/15.0, 0.0 ] )
-#         abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
-#         self.assertTrue( numpy.allclose( gold_sol_coeff, test_sol_coeff ) )
-#         self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-12 )
+    def test_cubic_polynomial_target_cubic_bspline( self ):
+        # print( "POLY TEST" )
+        target_fun = lambda x: x**3 - (8/5)*x**2 + (3/5)*x
+        spline_space = { "domain": [0, 1], "degree": [ 3, 3 ], "continuity": [ -1, 2, -1 ] }
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        continuity = spline_space["continuity"]
+        test_sol_coeff = computeSolution( continuity,target_fun = target_fun, uspline_bext = uspline_bext )
+        # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
+        gold_sol_coeff = numpy.array( [ 0.0, 1.0/10.0, 1.0/30.0, -1.0/15.0, 0.0 ] )
+        abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
+        self.assertTrue( numpy.allclose( gold_sol_coeff, test_sol_coeff ) )
+        self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-12 )
 
-#     def test_sin_target( self ):
-#         # print( "SIN TEST" )
-#         target_fun = lambda x: numpy.sin( numpy.pi * x )
-#         spline_space = { "domain": [0, 1], "degree": [ 3, 3 ], "continuity": [ -1, 2, -1 ] }
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_sol_coeff = computeSolution( target_fun = target_fun, uspline_bext = uspline_bext )
-#         abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
-#         # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
-#         self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-2 )
+    def test_sin_target( self ):
+        # print( "SIN TEST" )
+        target_fun = lambda x: numpy.sin( numpy.pi * x )
+        spline_space = { "domain": [0, 1], "degree": [ 3, 3 ], "continuity": [ -1, 2, -1 ] }
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        continuity = spline_space["continuity"]
+        test_sol_coeff = computeSolution( continuity,target_fun = target_fun, uspline_bext = uspline_bext )
+        abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
+        # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
+        self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-2 )
 
-#     def test_erfc_target( self ):
-#         # print( "ERFC TEST" )
-#         target_fun = lambda x: numpy.real( scipy.special.erfc( x ) )
-#         spline_space = { "domain": [-1, 1], "degree": [ 3, 1, 3 ], "continuity": [ -1, 1, 1, -1 ] }
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_sol_coeff = computeSolution( target_fun = target_fun, uspline_bext = uspline_bext )
-#         abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
-#         # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
-#         self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-2 )
+    def test_erfc_target( self ):
+        # print( "ERFC TEST" )
+        target_fun = lambda x: numpy.real( scipy.special.erfc( x ) )
+        spline_space = { "domain": [-1, 1], "degree": [ 3, 1, 3 ], "continuity": [ -1, 1, 1, -1 ] }
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        continuity = spline_space["continuity"]
+        test_sol_coeff = computeSolution(continuity ,target_fun = target_fun, uspline_bext = uspline_bext )
+        abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
+        # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
+        self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-2 )
 
-#     def test_exptx_target( self ):
-#         # print( "EXPT TEST" )
-#         target_fun = lambda x: float( numpy.real( float( x )**float( x ) ) )
-#         spline_space = { "domain": [-1, 1], "degree": [ 5, 5, 5, 5 ], "continuity": [ -1, 4, 0, 4, -1 ] }
-#         uspline.make_uspline_mesh( spline_space, "temp_uspline" )
-#         uspline_bext = bext.readBEXT( "temp_uspline.json" )
-#         test_sol_coeff = computeSolution( target_fun = target_fun, uspline_bext = uspline_bext )
-#         abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
-#         # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
-#         self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-2 )
+    def test_exptx_target( self ):
+        # print( "EXPT TEST" )
+        target_fun = lambda x: float( numpy.real( float( x )**float( x ) ) )
+        spline_space = { "domain": [-1, 1], "degree": [ 5, 5, 5, 5 ], "continuity": [ -1, 4, 0, 4, -1 ] }
+        uspline.make_uspline_mesh( spline_space, "temp_uspline" )
+        uspline_bext = bext.readBEXT( "temp_uspline.json" )
+        continuity = spline_space["continuity"]
+        test_sol_coeff = computeSolution(continuity ,target_fun = target_fun, uspline_bext = uspline_bext )
+        abs_err, rel_err = computeFitError( target_fun, test_sol_coeff, uspline_bext )
+        # plotCompareFunToTestSolution( target_fun, test_sol_coeff, uspline_bext )
+        self.assertAlmostEqual( first = rel_err, second = 0, delta = 1e-2 )
         
 unittest.main()
