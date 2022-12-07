@@ -16,6 +16,15 @@ import Basis_Func as BF
 # from src import basis
 
 #creates midpoint reimann Quad along domain [-1,1]
+
+def quad( fun, domain, num_points ):
+    jacobian = ( domain[1] - domain[0] ) / ( 1 - (-1) )
+    x_qp, w_qp = computeGaussLegendreQuadrature( num_points )
+    integral = 0.0
+    for qp in range( 0, len( x_qp ) ):
+        integral += ( fun( x_qp[qp] ) * w_qp[qp] ) * jacobian
+    return integral
+
 def riemannQuadrature(fun, num_points):
     x,w = getRiemannQuadrature(num_points)
     f_x = []

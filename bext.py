@@ -23,8 +23,14 @@ def getNumElems( uspline ):
 def getNumVertices( uspline ):
     return uspline["num_vertices"]
 
-# def getContinuity(uspline):
-#     return uspline["continuity"]
+def getDomain( uspline ):
+    nodes = getSplineNodes( uspline )
+    return [ min( nodes[:,0] ), max( nodes[:,0] ) ]
+
+def getNodeIdNearPoint( uspline, point ):
+    spline_nodes = getSplineNodes( uspline )[:,0]
+    node_dist = numpy.sqrt( ( spline_nodes - point )**2.0 )
+    return numpy.argmin( node_dist )
 
 def getNumNodes( uspline ):
     return getSplineNodes( uspline ).shape[0]
